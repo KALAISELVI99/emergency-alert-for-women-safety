@@ -1,0 +1,87 @@
+#include <SoftwareSerial.h>
+#include <LiquidCrystal_I2C.h>
+String tempSerial, tempGSM;
+//LiquidCrystal_I2C lcd(0x3F, 16, 2);
+SoftwareSerial gsm(10, 11); // RX, TX of Arduino
+char phone_no[] = "+919894143983";
+int push_button = 5;
+int buzzer = 6;
+int temp_value, temp_alert_val, temp_shut_val;
+int temp_Status;
+int secure_value;
+void setup() {
+Serial.begin(9600); //Set Serial Monitor Baudrate
+pinMode(10, INPUT);
+pinMode(11, OUTPUT);
+pinMode(5, INPUT);
+pinMode(6, OUTPUT);
+//lcd.begin(16,2);
+// Turn on the blacklight and print a message.
+// lcd.backlight();
+Serial.println("SIM800L Test");
+gsm.begin(4800); // Set GSM Baudrate
+}
+void loop() {
+Checkstatus();
+CheckShutDown();
+}
+void Checkstatus()
+{
+//lcd.setCursor(0,0);
+//lcd.print(" alert");
+temp_alert_val = ScanLevel();
+if (temp_alert_val == LOW)
+{
+SetAlert(); // Function to send SMS Alerts
+}
+}
+int ScanLevel()
+{
+secure_value = digitalRead(push_button); // reads the sensor output
+(Vout of LM35)
+return secure_value; // returns temperature value in degree celsius
+}
+void SetAlert()
+{
+digitalWrite(buzzer, HIGH);
+delay(200);
+alertSMS(); // Function to send AT Commands to GSM module
+temp_Status = 1;
+//lcd.setCursor(0,1);
+//lcd.print("SMS Sent!");
+}
+void CheckShutDown()
+{
+if (temp_Status == 1)
+{
+temp_shut_val = ScanLevel();
+if (temp_shut_val == HIGH)
+{
+//lcd.setCursor(0,1);
+//lcd.print("pir detect");
+digitalWrite(buzzer, LOW);
+temp_Status = 0;
+}
+}
+}
+void alertSMS() {
+gsm.println("AT"); //Once the handshake test is successful, it will
+back to OK
+delay(200);
+gsm.println("AT+CMGF=1"); // Configuring TEXT mode
+delay(200);
+gsm.println("AT+CMGS=\"+919894143983\"+919080911176\r"); //change ZZ
+with country code and xxxxxxxxxxx with phone number to sms
+delay(200);
+gsm.print("HELP ME I AM IN TROUBLE IN THIS LOCATION
+.https://www.google.co.in/maps/place/Vellore,+Tamil+Nadu/@12.8992994,
+79.0483016,12z/data=!3m1!4b1!4m5!3m4!1s0x3bad38e61fa68ffb:0xbedda6917
+d262b5e!8m2!3d12.9165167!4d79.1324986!!!"); //text content
+delay(200);
+gsm.write(26);
+delay(500);
+Serial.println("sms sent!
+https://www.google.co.in/maps/place/Vellore,+Tamil+Nadu/@12.8992994,7
+9.0483016,12z/data=!3m1!4b1!4m5!3m4!1s0x3bad38e61fa68ffb:0xbedda6917d
+262b5e!8m2!3d12.9165167!4d79.1324986");
+}
